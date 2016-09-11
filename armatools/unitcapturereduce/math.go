@@ -2,34 +2,6 @@ package unitcapturereduce
 
 import "math"
 
-type finalFloat64 struct {
-	value float64
-}
-
-func newFinalFloat64(value float64) finalFloat64 {
-	return finalFloat64{
-		value: value,
-	}
-}
-
-func (ff finalFloat64) Value() float64 {
-	return ff.value
-}
-
-type finalInt struct {
-	value int
-}
-
-func newFinalInt(value int) finalInt {
-	return finalInt{
-		value: value,
-	}
-}
-
-func (fi finalInt) Value() int {
-	return fi.value
-}
-
 // Linearly interpolate between two values
 // Algorithm from https://en.wikipedia.org/wiki/Linear_interpolation
 func lerp(v0, v1, t float64) float64 {

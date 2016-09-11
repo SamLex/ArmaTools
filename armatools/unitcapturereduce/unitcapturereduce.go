@@ -36,6 +36,10 @@ func parseCaptureData(rawCaptureData string) (*captureKeyFrames, error) {
 	data := list.New()
 
 	for i, unsafeKeyFrame := range unsafeCaptureData {
+		if len(unsafeKeyFrame) != 5 {
+			return nil, fmt.Errorf("Invalid UnitCapture Output")
+		}
+
 		time, timeOK := unsafeKeyFrame[0].(float64)
 
 		unsafePosition, unsafePositionOK := unsafeKeyFrame[1].([]interface{})
@@ -52,12 +56,12 @@ func parseCaptureData(rawCaptureData string) (*captureKeyFrames, error) {
 			!unsafePositionOK || !unsafeDirectionOK || !unsafeUpOK || !unsafeVelocityOK ||
 			position == nil || direction == nil || up == nil || velocity == nil {
 
-			return nil, fmt.Errorf("Invalid Unit Capture output format")
+			return nil, fmt.Errorf("Invalid UnitCapture Output")
 		}
 
 		keyframe := &captureKeyFrame{
-			OriginalFrameNumber: newFinalInt(i),
-			Time:                newFinalFloat64(time),
+			OriginalFrameNumber: i,
+			Time:                time,
 			Position:            *position,
 			Direction:           *direction,
 			Up:                  *up,
@@ -84,9 +88,9 @@ func unsafeSliceToVec3(slice []interface{}) *vec3 {
 	}
 
 	return &vec3{
-		A: newFinalFloat64(a),
-		B: newFinalFloat64(b),
-		C: newFinalFloat64(c),
+		A: a,
+		B: b,
+		C: c,
 	}
 }
 
@@ -108,11 +112,11 @@ func (ckf *captureKeyFrames) reduce(probabilityThreshold float64) {
 	end := endElm.Value.(*captureKeyFrame)
 
 	for {
-		if start.OriginalFrameNumber.Value() != count {
+		if start.OriginalFrameNumber != count {
 			panic("A frame has been skipped")
 		}
 
-		newFrame := start.lerp(end, consider.Time.Value())
+		newFrame := start.lerp(end, consider.Time)
 
 		if vectorisedNormalDistributionPDF(newFrame.toSlice(), consider.toSlice(), 1) > probabilityThreshold {
 			(*list.List)(ckf).Remove(considerElm)
@@ -155,8 +159,8 @@ func (ckf *captureKeyFrames) SQFString() string {
 }
 
 type captureKeyFrame struct {
-	OriginalFrameNumber finalInt
-	Time                finalFloat64
+	OriginalFrameNumber int
+	Time                float64
 	Position            vec3
 	Direction           vec3
 	Up                  vec3
@@ -164,11 +168,11 @@ type captureKeyFrame struct {
 }
 
 func (ckf *captureKeyFrame) lerp(end *captureKeyFrame, time float64) *captureKeyFrame {
-	t := (time - ckf.Time.Value()) / end.Time.Value()
+	t := (time - ckf.Time) / end.Time
 
 	return &captureKeyFrame{
-		OriginalFrameNumber: newFinalInt(-1),
-		Time:                newFinalFloat64(time),
+		OriginalFrameNumber: -1,
+		Time:                time,
 		Position:            ckf.Position.lerp(end.Position, t),
 		Direction:           ckf.Direction.lerp(end.Direction, t),
 		Up:                  ckf.Up.lerp(end.Up, t),
@@ -179,25 +183,25 @@ func (ckf *captureKeyFrame) lerp(end *captureKeyFrame, time float64) *captureKey
 func (ckf *captureKeyFrame) toSlice() []float64 {
 	slice := make([]float64, 12)
 
-	slice[0] = ckf.Position.A.Value()
-	slice[1] = ckf.Position.B.Value()
-	slice[2] = ckf.Position.C.Value()
+	slice[0] = ckf.Position.A
+	slice[1] = ckf.Position.B
+	slice[2] = ckf.Position.C
 
-	slice[3] = ckf.Direction.A.Value()
-	slice[4] = ckf.Direction.B.Value()
-	slice[5] = ckf.Direction.C.Value()
+	slice[3] = ckf.Direction.A
+	slice[4] = ckf.Direction.B
+	slice[5] = ckf.Direction.C
 
-	slice[6] = ckf.Up.A.Value()
-	slice[7] = ckf.Up.B.Value()
-	slice[8] = ckf.Up.C.Value()
+	slice[6] = ckf.Up.A
+	slice[7] = ckf.Up.B
+	slice[8] = ckf.Up.C
 
-	slice[9] = ckf.Velocity.A.Value()
-	slice[10] = ckf.Velocity.B.Value()
-	slice[11] = ckf.Velocity.C.Value()
+	slice[9] = ckf.Velocity.A
+	slice[10] = ckf.Velocity.B
+	slice[11] = ckf.Velocity.C
 
 	return slice
 }
 
 func (ckf *captureKeyFrame) SQFString() string {
-	return fmt.Sprintf("[%v,%s,%s,%s,%s]", ckf.Time.Value(), ckf.Position.SQFString(), ckf.Direction.SQFString(), ckf.Up.SQFString(), ckf.Velocity.SQFString())
+	return fmt.Sprintf("[%v,%s,%s,%s,%s]", ckf.Time, ckf.Position.SQFString(), ckf.Direction.SQFString(), ckf.Up.SQFString(), ckf.Velocity.SQFString())
 }
