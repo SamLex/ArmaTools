@@ -1,35 +1,23 @@
 package unitcapturereduce
 
-import (
-	"fmt"
-	"math"
-)
+import "fmt"
 
-// Basic 3 component vector
+// Basic immutable 3 component vector
 type vec3 struct {
-	A float64
-	B float64
-	C float64
+	A finalFloat64
+	B finalFloat64
+	C finalFloat64
 }
 
 // Element-wise linear interpolation been this vector and another
 func (v vec3) lerp(vOther vec3, t float64) vec3 {
 	return vec3{
-		A: lerp(v.A, vOther.A, t),
-		B: lerp(v.B, vOther.B, t),
-		C: lerp(v.C, vOther.C, t),
+		A: newFinalFloat64(lerp(v.A.Value(), vOther.A.Value(), t)),
+		B: newFinalFloat64(lerp(v.B.Value(), vOther.B.Value(), t)),
+		C: newFinalFloat64(lerp(v.C.Value(), vOther.C.Value(), t)),
 	}
 }
 
-// Maximum element-wise percentage difference
-func (v vec3) maxPercentDifference(vOther vec3) float64 {
-	aDifference := percentDifference(v.A, vOther.A)
-	bDifference := percentDifference(v.B, vOther.B)
-	cDifference := percentDifference(v.C, vOther.C)
-
-	return math.Max(aDifference, math.Max(bDifference, cDifference))
-}
-
-func (v vec3) String() string {
-	return fmt.Sprintf("[%v,%v,%v]", v.A, v.B, v.C)
+func (v vec3) SQFString() string {
+	return fmt.Sprintf("[%v,%v,%v]", v.A.Value(), v.B.Value(), v.C.Value())
 }
