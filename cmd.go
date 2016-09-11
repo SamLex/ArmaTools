@@ -43,6 +43,7 @@ func main() {
 func unitCaptureReducePageHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var errorString string
+
 	var orginalFrames int
 	var orginalKilobytes float64
 	var reducedFrames int
@@ -50,13 +51,13 @@ func unitCaptureReducePageHandler(w http.ResponseWriter, r *http.Request) {
 	var reduced string
 
 	if r.Method == "POST" {
-		captureData := r.FormValue("captureData")
-		stringErrorPercent := r.FormValue("errorPercent")
-
 		var errorPercent float64
-		errorPercent, err = strconv.ParseFloat(stringErrorPercent, 64)
+
+		captureData := r.FormValue("captureData")
+		errorPercent, err = strconv.ParseFloat(r.FormValue("errorPercent"), 64)
+
 		if err == nil {
-			reduced, orginalFrames, reducedFrames, err = unitcapturereduce.ReduceUnitCapture(captureData, errorPercent)
+			reduced, orginalFrames, reducedFrames, err = unitcapturereduce.ReduceUnitCapture(captureData, 1-errorPercent)
 			if err == nil {
 				orginalKilobytes = float64(len([]byte(captureData))) / 1024
 				reducedKilobytes = float64(len([]byte(reduced))) / 1024
@@ -67,6 +68,7 @@ func unitCaptureReducePageHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_, isSyntaxError := err.(*json.SyntaxError)
 		_, isNumError := err.(*strconv.NumError)
+
 		if isSyntaxError {
 			errorString = "Invalid UnitCapture Output"
 		} else if isNumError {

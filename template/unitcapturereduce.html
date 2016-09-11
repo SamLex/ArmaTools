@@ -52,8 +52,8 @@
         <br/>
         {{end}}
         <form id="captureDataForm" method="post" enctype="multipart/form-data">
-            <label for="errorPercent">Error Threshold</label>
-            <input form="captureDataForm" id="errorPercent" name="errorPercent" placeholder="Error Threshold" required="true" type="number" min="0" step="any">
+            <label for="errorPercent">Percentage Error Threshold</label>
+            <input form="captureDataForm" id="errorPercent" name="errorPercent" placeholder="Percentage Error Threshold" required="true" type="number" min="0" max="100" step="any">
             <br />
             <p></p>
             <textarea rows="30" form="captureDataForm" style="width:100%;" autofocus="true" id="captureData" name="captureData" required="true" wrap="soft" placeholder="UnitCapture Output">{{if .Result.Reduced}}{{.Result.Reduced}}{{end}}</textarea>
