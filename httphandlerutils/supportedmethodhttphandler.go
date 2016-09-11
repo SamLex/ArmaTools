@@ -7,6 +7,8 @@ type supportedMethodHTTPHandler struct {
 	supportedMethods []string
 }
 
+// SupportedMethods only accepts if the request method is one of those specified
+// Returns HTTP 405 on an unsupported method
 func SupportedMethods(nested http.Handler, methods ...string) http.Handler {
 	return &supportedMethodHTTPHandler{
 		nested:           nested,

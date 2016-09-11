@@ -10,6 +10,8 @@ type simpleLoggingHTTPHandler struct {
 	logger *log.Logger
 }
 
+// SimpleLogging logs every request in a simple format:
+// "$remoteAddress $httpMethod $requestedHost $requestURI $httpProtocol $requestLength $responseLength $requestUserAgent"
 func SimpleLogging(nested http.Handler) http.Handler {
 	return &simpleLoggingHTTPHandler{
 		nested: nested,
