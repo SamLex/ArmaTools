@@ -7,6 +7,20 @@ import (
 	"fmt"
 )
 
+/*
+Reduction algorithm:
+	Assume UnitCapture outputs keyframes that are linearly interpolated between by UnitPlay (an approximation of actual behaviour)
+	Goal: Remove keyframes that do not greatly effect the followed 'path' ('path' here being the path through 12 demension space that the keyframes represent)
+
+	1. Keep the first and last keyframe
+	2. For each keyframe between the first and last consider removing it;
+		2.1 Linearly interpolate between the one before and the one after using the time of the one under consideration
+		2.2 Construct a normal distribution with the current keyframe as mean and a standard deviation of 1
+		2.3 Calculate the probability of the linearly interpolated keyframe using this distribution
+		2.4 If the probability of this keyframe is above the probability threshold, the current key frame can be removed
+	3. Continue until all keyframes have been considered
+*/
+
 // ReduceUnitCapture reduces BIS_fnc_UnitCapture in a lossy manner using an error threshold
 func ReduceUnitCapture(rawCaptureData string, probabilityThreshold float64) (string, int, int, error) {
 	captureData, err := parseCaptureData(rawCaptureData)
@@ -26,7 +40,10 @@ func ReduceUnitCapture(rawCaptureData string, probabilityThreshold float64) (str
 	return captureData.SQFString(), before, after, nil
 }
 
+// Parse the SQF array capture data into a List of captureKeyFrame structs
 func parseCaptureData(rawCaptureData string) (*captureKeyFrames, error) {
+	// A SQF array is actually valid JSON, so parse as json
+	// No typesafe way to represent inner slice though
 	var unsafeCaptureData [][]interface{}
 	err := json.Unmarshal([]byte(rawCaptureData), &unsafeCaptureData)
 	if err != nil {
@@ -35,10 +52,13 @@ func parseCaptureData(rawCaptureData string) (*captureKeyFrames, error) {
 
 	data := list.New()
 
+	// Unpack each parsed keyframe into a captureKeyFrame
 	for i, unsafeKeyFrame := range unsafeCaptureData {
 		if len(unsafeKeyFrame) != 5 {
 			return nil, fmt.Errorf("Invalid UnitCapture Output")
 		}
+
+		// Typesafe assertions to the correct type
 
 		time, timeOK := unsafeKeyFrame[0].(float64)
 
@@ -52,6 +72,7 @@ func parseCaptureData(rawCaptureData string) (*captureKeyFrames, error) {
 		up := unsafeSliceToVec3(unsafeUp)
 		velocity := unsafeSliceToVec3(unsafeVelocity)
 
+		// Check everything asserted properly
 		if !timeOK ||
 			!unsafePositionOK || !unsafeDirectionOK || !unsafeUpOK || !unsafeVelocityOK ||
 			position == nil || direction == nil || up == nil || velocity == nil {
@@ -59,6 +80,7 @@ func parseCaptureData(rawCaptureData string) (*captureKeyFrames, error) {
 			return nil, fmt.Errorf("Invalid UnitCapture Output")
 		}
 
+		// Pack into struct and add to list
 		keyframe := &captureKeyFrame{
 			OriginalFrameNumber: i,
 			Time:                time,
@@ -74,6 +96,8 @@ func parseCaptureData(rawCaptureData string) (*captureKeyFrames, error) {
 	return (*captureKeyFrames)(data), nil
 }
 
+// Unpack an unsafe slice of 3 elemenrs into a vec3
+// Returns nil if the slice does not have 3 elements or are not all float64s
 func unsafeSliceToVec3(slice []interface{}) *vec3 {
 	if len(slice) != 3 {
 		return nil
@@ -100,6 +124,7 @@ func (ckf *captureKeyFrames) numberOfFrames() int {
 	return (*list.List)(ckf).Len()
 }
 
+// Reduce the capture data (see algorithm above)
 func (ckf *captureKeyFrames) reduce(probabilityThreshold float64) {
 	startElm := (*list.List)(ckf).Front()
 	considerElm := startElm.Next()
@@ -134,6 +159,7 @@ func (ckf *captureKeyFrames) reduce(probabilityThreshold float64) {
 	}
 }
 
+// Convert the keyframes back to SQF array format
 func (ckf *captureKeyFrames) SQFString() string {
 	buf := &bytes.Buffer{}
 
@@ -159,6 +185,7 @@ type captureKeyFrame struct {
 	Velocity            vec3
 }
 
+// Linearly interpolate between two keyframes
 func (ckf *captureKeyFrame) lerp(end *captureKeyFrame, time float64) *captureKeyFrame {
 	t := (time - ckf.Time) / end.Time
 
@@ -172,6 +199,8 @@ func (ckf *captureKeyFrame) lerp(end *captureKeyFrame, time float64) *captureKey
 	}
 }
 
+// Convert a keyframe into a slice with 12 elements
+// Helpful for treating a keyframe as one big vector
 func (ckf *captureKeyFrame) toSlice() []float64 {
 	slice := make([]float64, 12)
 
@@ -194,6 +223,7 @@ func (ckf *captureKeyFrame) toSlice() []float64 {
 	return slice
 }
 
+// Convert a keyframe to SQF array format
 func (ckf *captureKeyFrame) SQFString() string {
 	return fmt.Sprintf("[%v,%s,%s,%s,%s]", ckf.Time, ckf.Position.SQFString(), ckf.Direction.SQFString(), ckf.Up.SQFString(), ckf.Velocity.SQFString())
 }

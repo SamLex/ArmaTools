@@ -37,7 +37,7 @@
         </style>
     </head>
     <body>
-        <h1>UnitCapture Reducer 0.1</h1>
+        <h1>UnitCapture Reducer 0.2</h1>
         {{if .Error}}
         <p class="bubble red">{{.Error}}</p>
         <br/>
@@ -65,10 +65,11 @@
         <ol>
             <li><p>Capture your animation with BIS_fnc_UnitCapture.</p></li>
             <li><p>Paste the output into the text area above.</p></li>
-            <li><p>Set the allowed error threshold. Can be any number above 0 (0 yields no reduction). A larger value increases the scope for reduction but decreases animation quality.</p></li>
+            <li><p>Set the allowed error threshold. Can be any percentage between 0 and 100 inclusive. A larger value increases the scope for reduction but decreases animation quality.</p></li>
             <li><p>Press submit. The above text area will now contain the reduced version of the entered UnitCapture output.</p></li>
-            <li><p>The reduced output can be reduced again to possibly achieve a smaller output.</p></li>
+            <li><p>Enter the threshold and press submit again to attempt to reduce it further (at the cost of quality).</p></li>
         </ol>
+        <p><b>Tip:</b> An error threshold of 100% and 2 or 3 repeated applications can still yield high animation quality</p>
         <hr/>
         <p style="text-align:center;font-size: 0.8em">
             Available on <a href="https://github.com/SamLex/ArmaTools">GitHub</a> under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 license</a>

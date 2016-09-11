@@ -18,6 +18,7 @@ func (v vec3) lerp(vOther vec3, t float64) vec3 {
 	}
 }
 
+// Represents a vec3 as a SQF array with 3 elements
 func (v vec3) SQFString() string {
 	return fmt.Sprintf("[%v,%v,%v]", v.A, v.B, v.C)
 }
