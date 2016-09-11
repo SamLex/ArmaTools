@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/SamLex/armatoolsserver/armatools/unitcapturereduce"
 	"github.com/SamLex/armatoolsserver/httphandlerutils"
@@ -15,7 +14,6 @@ import (
 
 var unitCaptureReduceTemplate = template.Must(template.ParseFiles("template/unitcapturereduce.html"))
 
-var httpTimeoutTime = flag.Duration("timeout", 10*time.Second, "HTTP timeout")
 var httpBindAddress = flag.String("bind", "127.0.0.1:80", "Bind address for HTTP server")
 
 func init() {
@@ -31,9 +29,8 @@ func main() {
 		httphandlerutils.SimpleLogging(
 			httphandlerutils.SupportedMethods(
 				httphandlerutils.ExactPath("/",
-					http.TimeoutHandler(
-						httphandlerutils.PanicHandler(http.HandlerFunc(unitCaptureReducePageHandler)),
-						*httpTimeoutTime, "")), "GET", "POST")))
+					httphandlerutils.PanicHandler(
+						http.HandlerFunc(unitCaptureReducePageHandler))), "GET", "POST")))
 
 	server := http.Server{
 		Addr:    *httpBindAddress,
