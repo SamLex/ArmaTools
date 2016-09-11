@@ -32,7 +32,7 @@ func main() {
 			httphandlerutils.SupportedMethods(
 				httphandlerutils.ExactPath("/",
 					http.TimeoutHandler(
-						http.HandlerFunc(unitCaptureReducePageHandler),
+						httphandlerutils.PanicHandler(http.HandlerFunc(unitCaptureReducePageHandler)),
 						*httpTimeoutTime, "")), "GET", "POST")))
 
 	server := http.Server{
@@ -45,6 +45,7 @@ func main() {
 
 func unitCaptureReducePageHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
+	var errorString string
 	var orginalFrames int
 	var orginalKilobytes float64
 	var reducedFrames int
@@ -66,7 +67,6 @@ func unitCaptureReducePageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var errorString string
 	if err != nil {
 		_, isSyntaxError := err.(*json.SyntaxError)
 		_, isNumError := err.(*strconv.NumError)
@@ -87,20 +87,14 @@ func unitCaptureReducePageHandler(w http.ResponseWriter, r *http.Request) {
 		Reduced          string
 	}
 
-	type Data struct {
-		Error  string
-		Result Result
-	}
-
-	data := &Data{
-		Error: errorString,
-		Result: Result{
-			OrginalFrames:    orginalFrames,
-			OrginalKilobytes: orginalKilobytes,
-			ReducedFrames:    reducedFrames,
-			ReducedKilobytes: reducedKilobytes,
-			Reduced:          reduced,
-		},
+	data := make(map[string]interface{})
+	data["Error"] = errorString
+	data["Result"] = &Result{
+		OrginalFrames:    orginalFrames,
+		OrginalKilobytes: orginalKilobytes,
+		ReducedFrames:    reducedFrames,
+		ReducedKilobytes: reducedKilobytes,
+		Reduced:          reduced,
 	}
 
 	err = unitCaptureReduceTemplate.Execute(w, data)
