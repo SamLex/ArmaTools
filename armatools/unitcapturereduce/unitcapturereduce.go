@@ -101,8 +101,6 @@ func (ckf *captureKeyFrames) numberOfFrames() int {
 }
 
 func (ckf *captureKeyFrames) reduce(probabilityThreshold float64) {
-	count := 0
-
 	startElm := (*list.List)(ckf).Front()
 	considerElm := startElm.Next()
 	endElm := considerElm.Next()
@@ -112,10 +110,6 @@ func (ckf *captureKeyFrames) reduce(probabilityThreshold float64) {
 	end := endElm.Value.(*captureKeyFrame)
 
 	for {
-		if start.OriginalFrameNumber != count {
-			panic("A frame has been skipped")
-		}
-
 		newFrame := start.lerp(end, consider.Time)
 
 		if vectorisedNormalDistributionPDF(newFrame.toSlice(), consider.toSlice(), 1) > probabilityThreshold {
@@ -137,8 +131,6 @@ func (ckf *captureKeyFrames) reduce(probabilityThreshold float64) {
 		start = startElm.Value.(*captureKeyFrame)
 		consider = considerElm.Value.(*captureKeyFrame)
 		end = endElm.Value.(*captureKeyFrame)
-
-		count++
 	}
 }
 

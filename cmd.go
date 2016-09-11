@@ -57,7 +57,8 @@ func unitCaptureReducePageHandler(w http.ResponseWriter, r *http.Request) {
 		errorPercent, err = strconv.ParseFloat(r.FormValue("errorPercent"), 64)
 
 		if err == nil {
-			reduced, orginalFrames, reducedFrames, err = unitcapturereduce.ReduceUnitCapture(captureData, 1-errorPercent)
+			errorProbability := (100 - errorPercent) / 100
+			reduced, orginalFrames, reducedFrames, err = unitcapturereduce.ReduceUnitCapture(captureData, errorProbability)
 			if err == nil {
 				orginalKilobytes = float64(len([]byte(captureData))) / 1024
 				reducedKilobytes = float64(len([]byte(reduced))) / 1024
